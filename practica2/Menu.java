@@ -110,6 +110,9 @@ public class Menu implements ActionListener, WindowFocusListener
 			CargaDatos datos = new CargaDatos();
 			datos.frame.setVisible(true);
 			this.frmInicio.setVisible(false);
+		}else if(e.getSource() == this.btnInicio) {
+			VentanaJuego Juego = new VentanaJuego();
+			Juego.frame.setVisible(true);
 		}
 	}
 	

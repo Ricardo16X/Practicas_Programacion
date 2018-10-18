@@ -24,9 +24,13 @@ public class HiloMovimientoJefe implements Runnable
 		{
 			try
 			{
-				Thread.sleep(5);
-				Jefe.setLocation(Jefe.getX(), Jefe.getY() - 1);
-				if(Jefe.getY() == -5) {
+				// 60 Lento
+				// 30 Medio
+				// 20 Rapido
+				Thread.sleep(VentanaJuego.RapidezMovimientoJefe);
+				Jefe.setLocation(Jefe.getX(), Jefe.getY() - 5);
+				if (Jefe.getY() < -5)
+				{
 					break;
 				}
 			}
@@ -38,16 +42,18 @@ public class HiloMovimientoJefe implements Runnable
 		}
 		moverAbajo();
 	}
-
+	
 	private void moverAbajo()
 	{
 		// TODO Auto-generated method stub
-		while(true) {
+		while (true)
+		{
 			try
 			{
-				Thread.sleep(5);
-				Jefe.setLocation(Jefe.getX(), Jefe.getY() + 1);
-				if(Jefe.getY() == 275) {
+				Thread.sleep(VentanaJuego.RapidezMovimientoJefe);
+				Jefe.setLocation(Jefe.getX(), Jefe.getY() + 5);
+				if (Jefe.getY() > 275)
+				{
 					moverArriba();
 					break;
 				}
@@ -59,16 +65,18 @@ public class HiloMovimientoJefe implements Runnable
 			}
 		}
 	}
-
+	
 	private void moverArriba()
 	{
 		// TODO Auto-generated method stub
-		while(true) {
+		while (true)
+		{
 			try
 			{
-				Thread.sleep(5);
-				Jefe.setLocation(Jefe.getX(), Jefe.getY() - 1);
-				if(Jefe.getY() == -5) {
+				Thread.sleep(VentanaJuego.RapidezMovimientoJefe);
+				Jefe.setLocation(Jefe.getX(), Jefe.getY() - 5);
+				if (Jefe.getY() < -5)
+				{
 					moverAbajo();
 					break;
 				}

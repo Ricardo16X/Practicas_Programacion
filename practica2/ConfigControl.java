@@ -32,7 +32,7 @@ public class ConfigControl implements WindowListener, ActionListener, KeyListene
 	private JTextField disparo2_1;
 	private JButton btnAceptar;
 	
-	int disparo1Elegido = 0, disparo2Elegido = 0;
+	static int disparo1Elegido = 0, disparo2Elegido = 0;
 	
 	static Control control[] = new Control[1];
 	
@@ -152,7 +152,7 @@ public class ConfigControl implements WindowListener, ActionListener, KeyListene
 			@Override
 			public void itemStateChanged(ItemEvent cambio)
 			{
-				disparo1Elegido = comboDisiparo1.getSelectedIndex() - 1;
+				disparo1Elegido = comboDisiparo1.getSelectedIndex();
 			}
 		});
 		frame.getContentPane().add(comboDisiparo1);
@@ -176,7 +176,7 @@ public class ConfigControl implements WindowListener, ActionListener, KeyListene
 			@Override
 			public void itemStateChanged(ItemEvent cambio)
 			{
-				disparo2Elegido = comboDisparo2.getSelectedIndex() - 1;
+				disparo2Elegido = comboDisparo2.getSelectedIndex();
 			}
 		});
 		frame.getContentPane().add(comboDisparo2);
@@ -197,15 +197,22 @@ public class ConfigControl implements WindowListener, ActionListener, KeyListene
 		if (e.getSource() == btnAceptar)
 		{
 			// verificarIguales(Teclas);
-			if (verificarIguales(Teclas) > 0)
+			if (!(teclaDerecha.getText().isEmpty() || teclaIzq.getText().isEmpty() || teclaSalto.getText().isEmpty() || disparo1_1.getText().isEmpty() || disparo2_1.getText().isEmpty()))
 			{
-				JOptionPane.showMessageDialog(null, "Hay elementos repetidas!");
+				if (verificarIguales(Teclas) < 1)
+				{
+					control[0] = new Control(Teclas[0], Teclas[1], Teclas[2], Teclas[3], Teclas[4], disparo1Elegido, disparo2Elegido);
+					JOptionPane.showMessageDialog(null, "Control configurado!");
+					Menu.control = true;
+				}
+				else
+				{
+					JOptionPane.showMessageDialog(null, "Hay teclas repetidas");
+				}
 			}
 			else
 			{
-				control[0] = new Control(Teclas[0], Teclas[1], Teclas[2], Teclas[3], Teclas[4], disparo1Elegido, disparo2Elegido);
-				JOptionPane.showMessageDialog(null, "Control configurado!");
-				Menu.control = true;
+				JOptionPane.showMessageDialog(null, "Faltan teclas por asignar!");
 			}
 		}
 	}

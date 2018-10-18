@@ -15,8 +15,17 @@ public class HiloImagenCuphead implements Runnable
 	JFrame Frame;
 	JLabel Cuphead;
 	// Redimensionar imágenes
-	Image iconDer, iconIzq, iconDisparoDer, iconDisparoIzq;
-	Icon imageDer, imageIzq, imageDisparoDer, imageDisparoIzq;
+	Image iconIzq = new ImageIcon(getClass().getClassLoader().getResource("caminataIzq.png")).getImage();
+	Icon imageIzq = new ImageIcon(iconIzq.getScaledInstance(90, 90, Image.SCALE_SMOOTH));
+	
+	Image iconDer = new ImageIcon(getClass().getClassLoader().getResource("caminataDer.png")).getImage();
+	Icon imageDer = new ImageIcon(iconDer.getScaledInstance(90, 90, Image.SCALE_SMOOTH));
+	
+	Image iconDisparoDer = new ImageIcon(getClass().getClassLoader().getResource("CupDisparoDer.png")).getImage();
+	Icon imageDisparoDer = new ImageIcon(iconDisparoDer.getScaledInstance(90, 90, Image.SCALE_SMOOTH));
+	
+	int TeclaIzq = ConfigControl.control[0].getTeclaAtras();
+	
 	static boolean FiguraDerecha = false, FiguraIzquierda = false;
 	
 	public HiloImagenCuphead(JFrame frame, JLabel lblCuphead)
@@ -29,46 +38,35 @@ public class HiloImagenCuphead implements Runnable
 	@Override
 	public void run()
 	{
-		iconIzq = new ImageIcon(getClass().getClassLoader().getResource("caminataIzq.png")).getImage();
-		imageIzq = new ImageIcon(iconIzq.getScaledInstance(90, 90, Image.SCALE_SMOOTH));
-		
-		iconDer = new ImageIcon(getClass().getClassLoader().getResource("caminataDer.png")).getImage();
-		imageDer = new ImageIcon(iconDer.getScaledInstance(90, 90, Image.SCALE_SMOOTH));
-		
-		iconDisparoDer = new ImageIcon(getClass().getClassLoader().getResource("CupDisparoDer.png")).getImage();
-		imageDisparoDer = new ImageIcon(iconDisparoDer.getScaledInstance(90, 90, Image.SCALE_SMOOTH));
 		
 		// TODO Auto-generated method stub
 		Frame.addKeyListener(new KeyAdapter()
 		{
 			public void keyPressed(KeyEvent e)
 			{
-				switch (e.getKeyCode())
+				if (e.getKeyCode() == TeclaIzq)
 				{
-					case KeyEvent.VK_A:
-						Cuphead.setIcon(imageIzq);
-						FiguraDerecha = false;
-						FiguraIzquierda = true;
-						break;
-					case KeyEvent.VK_D:
-						Cuphead.setIcon(imageDer);
-						FiguraDerecha = true;
-						FiguraIzquierda = false;
-						break;
-					case KeyEvent.VK_J:
-					case KeyEvent.VK_K:
-						if (FiguraIzquierda)
-						{
-							Cuphead.setIcon(imageDisparoDer);
-						}
-						else if (FiguraDerecha)
-						{
-							Cuphead.setIcon(imageDisparoDer);
-						}
-						
-						break;
+					Cuphead.setIcon(imageIzq);
+					FiguraDerecha = false;
+					FiguraIzquierda = true;
 				}
-				
+				else if (e.getKeyCode() == ConfigControl.control[0].getTeclaAdelante())
+				{
+					Cuphead.setIcon(imageDer);
+					FiguraDerecha = true;
+					FiguraIzquierda = false;
+				}
+				if (e.getKeyCode() == ConfigControl.control[0].getTeclaDisparo1() || e.getKeyCode() == ConfigControl.control[0].getTeclaDisparo2())
+				{
+					if (FiguraIzquierda)
+					{
+						Cuphead.setIcon(imageDisparoDer);
+					}
+					else if (FiguraDerecha)
+					{
+						Cuphead.setIcon(imageDisparoDer);
+					}
+				}
 			}
 		});
 	}

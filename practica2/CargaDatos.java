@@ -41,8 +41,8 @@ public class CargaDatos implements ActionListener
 	static int contJefe = 0;
 	static int contDisparo = 0;
 	
-	//	Entero para controlar el último nivel.
-	static int UltimoNivel = contJefe;
+	// Entero para controlar el último nivel.
+	static int UltimoNivel;
 	
 	/**
 	 * Launch the application.
@@ -149,6 +149,7 @@ public class CargaDatos implements ActionListener
 			archivo.setFileFilter(filtro);
 			
 			int seleccion = archivo.showOpenDialog(panelEscoger);
+			
 			if (seleccion == JFileChooser.APPROVE_OPTION)
 			{
 				fichero = archivo.getSelectedFile();
@@ -179,6 +180,8 @@ public class CargaDatos implements ActionListener
 		}
 		else if (arg0.getSource() == this.btnEstablecerDatos)
 		{
+			contJefe = 0;
+			contDisparo = 0;
 			// Separar los datos cada @
 			String[] cadenaSeparada = cadena.split("\n");
 			cadenaModificada = "";
@@ -195,18 +198,19 @@ public class CargaDatos implements ActionListener
 				{
 					if (cadenaSeparada2[contadorArchivo].equalsIgnoreCase("JEFE"))
 					{
-						Jefes[contJefe] = new Jefe(cadenaSeparada2[contadorArchivo + 1], Integer.parseInt(cadenaSeparada2[contadorArchivo + 2]), Integer.parseInt(cadenaSeparada2[contadorArchivo + 3]), (cadenaSeparada2[contadorArchivo + 4]), Double.parseDouble(cadenaSeparada2[contadorArchivo + 5]), cadenaSeparada2[contadorArchivo + 6]);
+						Jefes[contJefe] = new Jefe(cadenaSeparada2[contadorArchivo + 1], Integer.parseInt(cadenaSeparada2[contadorArchivo + 2]), Integer.parseInt(cadenaSeparada2[contadorArchivo + 3]), (cadenaSeparada2[contadorArchivo + 4]), Double.parseDouble(cadenaSeparada2[contadorArchivo + 5]), cadenaSeparada2[contadorArchivo + 6], 0, 0);
 						contadorArchivo += 7;
 						contJefe += 1;
 					}
 					else if (cadenaSeparada2[contadorArchivo].equalsIgnoreCase("CUPHEAD"))
 					{
 						
-						tipoDisparo[contDisparo] = new DisparoCup(cadenaSeparada2[contadorArchivo + 1], (cadenaSeparada2[contadorArchivo + 2]), Double.parseDouble(cadenaSeparada2[contadorArchivo + 3]));
+						tipoDisparo[contDisparo] = new DisparoCup(cadenaSeparada2[contadorArchivo + 1], (cadenaSeparada2[contadorArchivo + 2]), Double.parseDouble(cadenaSeparada2[contadorArchivo + 3]), 0);
 						contadorArchivo += 4;
 						contDisparo += 1;
 					}
 				}
+				
 				JOptionPane.showMessageDialog(null, "Datos cargados correctamente!");
 				btnLeerArchivo.setEnabled(false);
 				btnEstablecerDatos.setEnabled(false);
@@ -220,6 +224,55 @@ public class CargaDatos implements ActionListener
 			{
 				JOptionPane.showMessageDialog(null, "Verifica que el archivo .cuphead tenga el formato correcto\n" + error.getMessage());
 			}
+			
+			// Ordenar el vector de objetos tipo Jefe para que queden en niveles ascendentes y colocarles su vida correspondiente a su nivel.
+			Jefe Temp;
+			for (int i = 0; i < contJefe; i++)
+			{
+				for (int j = 0; j < contJefe - 1; j++)
+				{
+					if (Jefes[j].getNivel() > Jefes[i].getNivel())
+					{
+						Temp = Jefes[j];
+						Jefes[j] = Jefes[j + 1];
+						Jefes[j + 1] = Temp;
+					}
+				}
+			}
+			// Proporcionando la velocidad de Disparo al Jefe y a Cuphead...
+			for (int k = 0; k < contJefe; k++)
+			{
+				if (Jefes[k].getVelocidad().equalsIgnoreCase("Rapido") || Jefes[k].getVelocidad().equalsIgnoreCase("Rápido"))
+				{
+					Jefes[k].setVelocidadDisparo(VentanaJuego.Rapido);
+				}
+				else if (Jefes[k].getVelocidad().equalsIgnoreCase("Medio"))
+				{
+					Jefes[k].setVelocidadDisparo(VentanaJuego.Medio);
+				}
+				else if (Jefes[k].getVelocidad().equalsIgnoreCase("Lento"))
+				{
+					Jefes[k].setVelocidadDisparo(VentanaJuego.Lento);
+				}
+				Jefes[k].setNivel(k + 1);
+				Jefes[k].setVida(100 * k + 100);
+			}
+			for (int k = 0; k < contDisparo; k++)
+			{
+				if (tipoDisparo[k].getVelocidad().equalsIgnoreCase("Rapido") || tipoDisparo[k].getVelocidad().equalsIgnoreCase("Rápido"))
+				{
+					tipoDisparo[k].setVelocidadDisparo(VentanaJuego.Rapido);
+				}
+				else if (tipoDisparo[k].getVelocidad().equalsIgnoreCase("Medio"))
+				{
+					tipoDisparo[k].setVelocidadDisparo(VentanaJuego.Medio);
+				}
+				else if (tipoDisparo[k].getVelocidad().equalsIgnoreCase("Lento"))
+				{
+					tipoDisparo[k].setVelocidadDisparo(VentanaJuego.Lento);
+				}
+			}
+			UltimoNivel = contJefe;
 		}
 	}
 }

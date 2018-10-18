@@ -4,14 +4,16 @@ import javax.swing.JLabel;
 
 public class HiloReloj implements Runnable
 {
-	JLabel Reloj;
+	JLabel Reloj, Segundero;
 	
 	int segundo, minuto;
+	int segundero;
 	
-	public HiloReloj(JLabel lblTiempo)
+	public HiloReloj(JLabel lblTiempo, JLabel lblSegundero)
 	{
 		// TODO Auto-generated constructor stub
 		Reloj = lblTiempo;
+		Segundero = lblSegundero;
 	}
 	
 	@Override
@@ -30,7 +32,7 @@ public class HiloReloj implements Runnable
 			{
 				Thread.sleep(1000);
 				segundo++;
-				
+				segundero++;
 				// Cambiar el texto al JLabel
 				if (segundo == 60)
 				{
@@ -38,6 +40,7 @@ public class HiloReloj implements Runnable
 					minuto++;
 				}
 				Reloj.setText("Tiempo: " + minuto + " : " + segundo);
+				Segundero.setText(Integer.toString(segundero));
 			}
 			catch (InterruptedException e)
 			{
@@ -45,5 +48,15 @@ public class HiloReloj implements Runnable
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public void setSegundero(int segundos)
+	{
+		segundos++;
+	}
+	
+	public int getSegundero()
+	{
+		return segundero;
 	}
 }

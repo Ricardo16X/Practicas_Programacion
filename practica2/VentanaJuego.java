@@ -7,24 +7,30 @@ import java.awt.Image;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
 public class VentanaJuego implements KeyListener
 {
-	
-	private JFrame frame;
+	// Instancia de CargaDatos para obtener la vida de los jefes a jugar
+	CargaDatos Jefes = new CargaDatos();
+	// Instancia lista de marcadores cuando mueran todos los jefes o muera cuphead
+	Marcadores marca = new Marcadores();
 	// Diseño de Nivel
-	// JLabel
-	JLabel lblNivel, lblTiempo, lblPuntaje, lblCuphead, lblJefe;
+	JFrame frame;
+	// JLabel de los personajes y su estatus de vida.
+	JLabel lblNivel, lblTiempo, lblPuntaje, lblCuphead, lblJefe, lblSegundero;
 	JLabel lblVidaCuphead, lblVidaJefe;
+	// Ventana dónde se desarrollará el juego.
+	private JPanel PanelSalud;
 	JPanel PanelJuego;
-	// Fin JLabel
-	
 	// Hilos a implementar
 	HiloReloj hiloReloj;
 	HiloMovimientoJefe hiloMovJefe;
@@ -32,29 +38,44 @@ public class VentanaJuego implements KeyListener
 	HiloImagenCuphead hiloMovCup;
 	HiloMovimientoCuphead hiloMoveCup;
 	MovimientoBalas hiloMovBalas;
-	// Colisiones hiloColisiones;
-	
+	HiloDisparosJefe hiloJefeDisparos;
+	// Los objetos Thread a los cuales les pasaré la clase que que implementa la interfaz Runnable
 	Thread threadReloj, threadMovJefe, threadMovCup, threadSalto, threadMoveCup,
-			threadMovBalas, threadColisiones;
-	// Fin Hilos
-	
+			threadMovBalas, threadDisparosJefe;
 	// Imagenes en Label
 	Image Imagen;
 	ImageIcon paraLabel;
-	private JPanel PanelSalud;
-	
+	// Enteros para verificar la vida de Jefe y Cuphead además de iniciarlizarlos en 100 por ser el primer nivel...
 	public static int VidaJefe = 100;
-	// Datos Cargados
-	int Nivel = 1;
+	public static int VidaCuphead = 100;
+	public static int FrecuenciaDisparoJefe = 1000;
+	static int Puntaje = 0;
+	static int RapidezMovimientoJefe = 50;
 	
+	static int contadorSegundos = 1;
+	// Entero que irá cambiando conforme se avance de Nivel y se comparará con contador de Jefes para saber si se ha llegado al último Nivel
+	static int Nivel = 1;
+	// 2 bala distinta para el jugador Cuphead que aparecerán dependiendo si es Disparo 1 o Disparo 2
 	JLabel Balas1[] = new JLabel[50];
 	JLabel Balas2[] = new JLabel[50];
-	
-	int contador_Balas1 = 0, contador_Balas2 = 0;
+	// 1 Tipo de bala para Jefe
+	JLabel BalasJefe[] = new JLabel[100];
+	// Contadores de balas para cuando el array se acabe, hacer el efecto de recarga rellenando nuevamente los arrays
+	int contador_Balas1 = 0, contador_Balas2 = 0, contador_BalasJefe = 0;
+	// Imagenes de las balas y su respectiva conversión para que se vean de manera correcta.
 	private Image balaImagen;
 	private ImageIcon BalaCuphead;
+	private ImageIcon BalaJefe;
+	// Timer que me ayuda a que el jefe dispare, ya que tuve inconvenientes con crear un hilo distinto que se ejecutara sin dormir el procesador cada X segundos
+	Timer pausador = new Timer();
+	TimerTask tareaPausada;
+	Timer puntaje = new Timer();
+	TimerTask puntajeTiempo;
+	// Enteros finales que determinarán la velocidad de las balas
+	static final int Rapido = 10, Medio = 50, Lento = 100;
+	// Sólo para veficiar que el aviso del útimo nivel se muestre sólo 1 vez
+	private boolean Aviso;
 	
-	// Fin Imagenes en Label
 	/**
 	 * Launch the application.
 	 */
@@ -84,13 +105,11 @@ public class VentanaJuego implements KeyListener
 	{
 		initialize();
 		// Llamada de Hilos
-		hiloReloj = new HiloReloj(lblTiempo);
+		hiloReloj = new HiloReloj(lblTiempo, lblSegundero);
 		hiloMovJefe = new HiloMovimientoJefe(lblJefe);
 		hiloSalto = new HiloSalto(lblCuphead);
 		hiloMovCup = new HiloImagenCuphead(frame, lblCuphead);
 		hiloMoveCup = new HiloMovimientoCuphead(frame, lblCuphead);
-		// hiloColisiones = new Colisiones(lblCuphead, lblJefe, Balas);
-		
 		// Paso de Hilos
 		threadReloj = new Thread(hiloReloj);
 		threadMovJefe = new Thread(hiloMovJefe);
@@ -114,7 +133,7 @@ public class VentanaJuego implements KeyListener
 			@Override
 			public void keyReleased(KeyEvent arg0)
 			{
-				if (arg0.getKeyCode() == KeyEvent.VK_S)
+				if (arg0.getKeyCode() == ConfigControl.control[0].getTeclaSalto())
 				{
 					threadSalto = new Thread(hiloSalto);
 					threadSalto.start();
@@ -123,7 +142,8 @@ public class VentanaJuego implements KeyListener
 		});
 		frame.setResizable(false);
 		frame.setBounds(100, 100, 900, 500);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setIconImage(new ImageIcon(getClass().getClassLoader().getResource("iconoVentana.jpg")).getImage());
+		frame.setTitle("Mini Cuphead - Práctica 2 IPC1");
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 		frame.addKeyListener(this);
@@ -144,6 +164,7 @@ public class VentanaJuego implements KeyListener
 		lblCuphead.setBounds(0, 308, 90, 90);
 		PanelJuego.add(lblCuphead);
 		
+		// Creación de Balas Iniciales
 		balaImagen = new ImageIcon(getClass().getClassLoader().getResource("bala1Jugador.png")).getImage();
 		BalaCuphead = new ImageIcon(balaImagen.getScaledInstance(30, 30, Image.SCALE_SMOOTH));
 		for (int i = 0; i < Balas1.length; i++)
@@ -164,6 +185,16 @@ public class VentanaJuego implements KeyListener
 			PanelJuego.add(Balas2[i]);
 		}
 		
+		balaImagen = new ImageIcon(getClass().getClassLoader().getResource("bala_jefe2.png")).getImage();
+		BalaJefe = new ImageIcon(balaImagen.getScaledInstance(70, 70, Image.SCALE_SMOOTH));
+		for (int i = 0; i < BalasJefe.length; i++)
+		{
+			BalasJefe[i] = new JLabel(BalaJefe);
+			BalasJefe[i].setBounds(lblJefe.getX(), lblJefe.getY() + 35, 70, 70);
+			BalasJefe[i].setVisible(false);
+			PanelJuego.add(BalasJefe[i]);
+		}
+		// Fin Creación de Balas Iniciales
 		JLabel lblSuelo = new JLabel(new ImageIcon(getClass().getClassLoader().getResource("suelo.png")));
 		lblSuelo.setBounds(0, 399, 605, 21);
 		PanelJuego.add(lblSuelo);
@@ -185,14 +216,27 @@ public class VentanaJuego implements KeyListener
 		lblTiempo = new JLabel("Tiempo:");
 		lblTiempo.setForeground(Color.WHITE);
 		lblTiempo.setFont(new Font("Segoe UI Light", Font.BOLD, 15));
-		lblTiempo.setBounds(261, 0, 193, 30);
+		lblTiempo.setBounds(126, 0, 193, 30);
 		PanelEstado.add(lblTiempo);
 		
 		lblPuntaje = new JLabel("Puntaje:");
 		lblPuntaje.setForeground(Color.WHITE);
 		lblPuntaje.setFont(new Font("Segoe UI Light", Font.BOLD, 15));
-		lblPuntaje.setBounds(689, 0, 193, 30);
+		lblPuntaje.setBounds(329, 0, 193, 30);
 		PanelEstado.add(lblPuntaje);
+		
+		JLabel lblNewLabel = new JLabel("Nombre:");
+		lblNewLabel.setBounds(532, 5, 358, 21);
+		PanelEstado.add(lblNewLabel);
+		lblNewLabel.setForeground(Color.WHITE);
+		lblNewLabel.setFont(new Font("Segoe UI Light", Font.BOLD, 15));
+		
+		lblSegundero = new JLabel("1");
+		lblSegundero.setForeground(Color.WHITE);
+		lblSegundero.setFont(new Font("Segoe UI Light", Font.BOLD, 15));
+		lblSegundero.setBounds(202, 0, 117, 30);
+		lblSegundero.setVisible(false);
+		PanelEstado.add(lblSegundero);
 		
 		PanelSalud = new JPanel();
 		PanelSalud.setBackground(new Color(0, 102, 204));
@@ -201,16 +245,88 @@ public class VentanaJuego implements KeyListener
 		PanelSalud.setLayout(null);
 		
 		lblVidaCuphead = new JLabel("HP: 100");
-		lblVidaCuphead.setBounds(10, 0, 106, 21);
+		lblVidaCuphead.setBounds(10, 5, 106, 21);
 		lblVidaCuphead.setForeground(Color.WHITE);
 		PanelSalud.add(lblVidaCuphead);
 		lblVidaCuphead.setFont(new Font("Segoe UI Light", Font.BOLD, 15));
 		
 		lblVidaJefe = new JLabel("HP: " + 100 * Nivel);
-		lblVidaJefe.setBounds(751, 5, 106, 21);
+		lblVidaJefe.setBounds(738, 5, 152, 21);
 		lblVidaJefe.setForeground(Color.WHITE);
 		PanelSalud.add(lblVidaJefe);
 		lblVidaJefe.setFont(new Font("Segoe UI Light", Font.BOLD, 15));
+		
+		tareaPausada = new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				if (VidaJefe > 0)
+				{
+					hiloJefeDisparos = new HiloDisparosJefe(lblJefe, VidaCuphead, BalasJefe, contador_BalasJefe, lblCuphead, lblVidaCuphead);
+					threadDisparosJefe = new Thread(hiloJefeDisparos);
+					contadorSegundos = Integer.parseInt(lblSegundero.getText());
+					Puntaje += VidaJefe / contadorSegundos;
+					lblPuntaje.setText("Puntaje: " + Puntaje);
+					if (contador_BalasJefe < 49)
+					{
+						contador_BalasJefe++;
+						threadDisparosJefe.start();
+					}
+					else
+					{
+						frame.remove(PanelJuego);
+						BalasJefe = rellenarBalasJefe();
+						for (int i = 0; i < BalasJefe.length; i++)
+						{
+							PanelJuego.add(BalasJefe[i]);
+						}
+						frame.getContentPane().add(PanelJuego);
+						PanelJuego.updateUI();
+						contador_BalasJefe = 0;
+					}
+				}
+				else
+				{
+					if (Nivel < CargaDatos.UltimoNivel)
+					{
+						// Mientras la vida del Jefe > 0 y el Nivel <= Ultimo Nivel se ejecutará este blque.
+						Nivel++;
+						VidaCuphead = 100;
+						VidaJefe = 100 * Nivel;
+						RapidezMovimientoJefe -= RapidezMovimientoJefe / CargaDatos.UltimoNivel;
+						// Muestra actualizada del Estado del Juego
+						lblNivel.setText("Nivel : " + Nivel);
+						lblVidaJefe.setText("HP: " + (100 * Nivel));
+						lblVidaCuphead.setText("HP: " + VidaCuphead);
+						// Fondo Nuevo por cada Nivel Pasado
+						PanelJuego.setBackground(new Color((int)(Math.random() * 250 + 1), (int)(Math.random() * 250 + 1), (int)(Math.random() * 250) + 1));
+					}
+					else
+					{
+						// Esto Indica que se ha sobrepasado el último Nivel por lo tanto el Juego Termina.
+						marca.frame.setVisible(true);
+						frame.setVisible(false);
+						pausador.cancel();
+					}
+				}
+				if (VidaCuphead <= 0)
+				{
+					marca.frame.setVisible(true);
+					frame.setVisible(false);
+					pausador.cancel();
+				}
+				if (Nivel == 4)
+				{
+					if (Aviso == false)
+					{
+						JOptionPane.showMessageDialog(null, "Ultimo Nivel!!");
+						Aviso = true;
+					}
+				}
+			}
+		};
+		pausador.schedule(tareaPausada, 1000, CargaDatos.Jefes[Nivel - 1].getFrecuencia() * 500);
 	}
 	
 	@Override
@@ -223,7 +339,7 @@ public class VentanaJuego implements KeyListener
 	public void keyReleased(KeyEvent arg0)
 	{
 		// TODO Auto-generated method stub
-		if (arg0.getKeyCode() == KeyEvent.VK_J)
+		if (arg0.getKeyCode() == ConfigControl.control[0].getTeclaDisparo1())
 		{
 			hiloMovBalas = new MovimientoBalas(Balas1, contador_Balas1, lblCuphead, lblCuphead.getY(), lblJefe, VidaJefe, lblVidaJefe);
 			threadMovBalas = new Thread(hiloMovBalas);
@@ -249,7 +365,7 @@ public class VentanaJuego implements KeyListener
 				contador_Balas1 = 0;
 			}
 		}
-		if (arg0.getKeyCode() == KeyEvent.VK_K)
+		if (arg0.getKeyCode() == ConfigControl.control[0].getTeclaDisparo2())
 		{
 			hiloMovBalas = new MovimientoBalas(Balas2, contador_Balas2, lblCuphead, lblCuphead.getY(), lblJefe, VidaJefe, lblVidaJefe);
 			threadMovBalas = new Thread(hiloMovBalas);
@@ -309,10 +425,25 @@ public class VentanaJuego implements KeyListener
 		return Recarga;
 	}
 	
+	public JLabel[] rellenarBalasJefe()
+	{
+		// TODO Auto-generated method stub
+		JLabel[] RecargaJefe = new JLabel[100];
+		balaImagen = new ImageIcon(getClass().getClassLoader().getResource("bala_jefe2.png")).getImage();
+		BalaJefe = new ImageIcon(balaImagen.getScaledInstance(70, 70, Image.SCALE_SMOOTH));
+		for (int i = 0; i < BalasJefe.length; i++)
+		{
+			RecargaJefe[i] = new JLabel(BalaJefe);
+			RecargaJefe[i].setBounds(lblJefe.getX(), lblJefe.getY() + 35, 70, 70);
+			RecargaJefe[i].setVisible(false);
+			PanelJuego.add(RecargaJefe[i]);
+		}
+		return RecargaJefe;
+	}
+	
 	@Override
 	public void keyTyped(KeyEvent arg0)
 	{
 		// TODO Auto-generated method stub
-		
 	}
 }

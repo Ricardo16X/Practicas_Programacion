@@ -27,19 +27,19 @@ public class HiloMovimientoCuphead implements Runnable
 		{
 			public void keyPressed(KeyEvent e)
 			{
-				switch (e.getKeyCode())
+				if (e.getKeyCode() == ConfigControl.control[0].getTeclaAdelante())
 				{
-					case KeyEvent.VK_A:
-						if (Cuphead.getX() > 0)
-						{
-							Cuphead.setLocation(Cuphead.getX() - 10, Cuphead.getY());
-						}
-						break;
-					case KeyEvent.VK_D:
-						if (Cuphead.getX() + 70 < 600)
-						{
-							Cuphead.setLocation(Cuphead.getX() + 10, Cuphead.getY());
-						}
+					if (Cuphead.getX() + 70 < 600)
+					{
+						Cuphead.setLocation(Cuphead.getX() + 10, Cuphead.getY());
+					}
+				}
+				else if (e.getKeyCode() == ConfigControl.control[0].getTeclaAtras())
+				{
+					if (Cuphead.getX() > 0)
+					{
+						Cuphead.setLocation(Cuphead.getX() - 10, Cuphead.getY());
+					}
 				}
 			}
 		});

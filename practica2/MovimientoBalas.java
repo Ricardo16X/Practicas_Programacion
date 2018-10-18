@@ -10,13 +10,13 @@ public class MovimientoBalas implements Runnable
 	int CoordenadaXBalaDerecha = 0, CoordenadaYBala, CoordenadaXBalaIzquierda;
 	int vidaJefe;
 	
-	public MovimientoBalas(JLabel[] balas, int ContadorBalas, JLabel lblCuphead, int i, JLabel lblJefe, int vidaJefe, JLabel lblVidaJefe)
+	public MovimientoBalas(JLabel[] balas, int ContadorBalas, JLabel lblCuphead, int CoordYBala, JLabel lblJefe, int vidaJefe, JLabel lblVidaJefe)
 	{
 		// TODO Auto-generated constructor stub
 		contador = ContadorBalas;
 		imagenes = balas;
 		Cuphead = lblCuphead;
-		CoordenadaYBala = i;
+		CoordenadaYBala = CoordYBala;
 		Jefe = lblJefe;
 		this.vidaJefe = vidaJefe;
 		this.lblVidaJefe = lblVidaJefe;
@@ -27,7 +27,6 @@ public class MovimientoBalas implements Runnable
 	{
 		// TODO Auto-generated method stub
 		CoordenadaXBalaDerecha = Cuphead.getX() + 90;
-		CoordenadaXBalaIzquierda = Cuphead.getX();
 		while (true)
 		{
 			try
@@ -38,16 +37,19 @@ public class MovimientoBalas implements Runnable
 				}
 				CoordenadaXBalaDerecha += 5;
 				imagenes[contador].setLocation(CoordenadaXBalaDerecha, CoordenadaYBala + 30);
-				Thread.sleep(10);
+				//	La velocidad con la que viajan las balas 
+				Thread.sleep(25);
 				if (imagenes[contador].getX() > 750 && (imagenes[contador].getY() > Jefe.getY() && imagenes[contador].getY() < Jefe.getY() + 150))
 				{
 					setVidaJefe(10);
 					lblVidaJefe.setText("HP: " + getVidaJefe());
 					System.out.println(imagenes[contador].getLocation());
 					imagenes[contador].setVisible(false);
-					if(getVidaJefe() <= 0) {
-						//	Aquí se ejecutará la nueva acción de subir nivel
-						Jefe.setVisible(false);
+					if (getVidaJefe() <= 0)
+					{
+						// Aquí se ejecutará la nueva acción de subir nivel
+						//	Cambio de Imagen de Jefe cuando el anterior muera.
+						//Jefe.setVisible(false);
 						lblVidaJefe.setText("HP: " + 0);
 					}
 					break;
@@ -68,23 +70,13 @@ public class MovimientoBalas implements Runnable
 		}
 	}
 	
-	
-	public void setVidaJefe(int restar) {
-		
+	public void setVidaJefe(int restar)
+	{
 		VentanaJuego.VidaJefe -= restar;
-		
-							
 	}
-	public int getVidaJefe() {
-		
-		return VentanaJuego.VidaJefe ;
-		
-		
+	public int getVidaJefe()
+	{
+		return VentanaJuego.VidaJefe;
 	}
-	
-	
-	
-	
-	
 	
 }

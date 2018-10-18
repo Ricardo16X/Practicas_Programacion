@@ -15,7 +15,7 @@ import javax.swing.border.BevelBorder;
 public class Marcadores
 {
 	
-	private JFrame frame;
+	JFrame frame;
 	private JTable table;
 	
 	/**
@@ -30,7 +30,7 @@ public class Marcadores
 				try
 				{
 					Marcadores window = new Marcadores();
-					window.frame.setVisible(true);
+					window.frame.setVisible(false);
 				}
 				catch (Exception e)
 				{
